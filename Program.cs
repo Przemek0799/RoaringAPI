@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using RoaringAPI.Dashboard;
 using RoaringAPI.Interface;
 using RoaringAPI.Mapping;
 using RoaringAPI.Model;
@@ -50,6 +51,8 @@ namespace RoaringAPI
                 builder.Services.AddScoped<ICompanyMapperService, CompanyMapperService>();
                 builder.Services.AddScoped<IAddressMapperService, AddressMapperService>();
                 builder.Services.AddScoped<ICompanyEmployeeMapperService, CompanyEmployeeMapperService>();
+                builder.Services.AddScoped<DashboardResults>();
+
 
                 builder.Services.AddHttpClient("RoaringAPI", client =>
                 {

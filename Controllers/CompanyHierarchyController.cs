@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 
 //brings most of the data to dashboard
@@ -36,42 +37,39 @@ namespace RoaringAPI.Controllers
                                               .ToListAsync();
 
                 _logger.LogInformation($"Found {companies.Count} companies matching RoaringCompanyId: {roaringCompanyId}");
+                _logger.LogInformation($"Companies Data: {JsonConvert.SerializeObject(companies)}");
+
 
                 var companyIds = companies.Select(c => c.CompanyId).ToList();
 
-                var addresses = await _context.Addresses
-                                              .Where(a => companyIds.Contains(a.CompanyId))
-                                              .ToListAsync();
-                var employees = await _context.CompanyEmployees
-                                              .Where(e => companyIds.Contains(e.CompanyId))
-                                              .ToListAsync();
-                var financialRecords = await _context.FinancialRecords
-                                               .Where(fr => companyIds.Contains(fr.CompanyId))
-                                                .ToListAsync();
-                var companyRatingIds = companies
-                 .Where(c => c.CompanyRatingId.HasValue)
-                 .Select(c => c.CompanyRatingId.Value)
-                 .Distinct()
-                 .ToList();
-
-                var companyRatings = await _context.CompanyRatings
-                    .Where(cr => companyRatingIds.Contains(cr.CompanyRatingId))
-                    .ToListAsync();
                 var companyStructures = await _context.CompanyStructures
-                                                      .Where(s => companyIds.Contains(s.CompanyId))
-                                                      .ToListAsync();
+                                       .Include(cs => cs.Company)
+                                       .Include(cs => cs.MotherCompany)
+                                       .Where(cs => companyIds.Contains(cs.CompanyId))
+                                       .ToListAsync();
 
-                _logger.LogInformation($"Found {addresses.Count} addresses, {employees.Count} employees, and {financialRecords.Count},  financial records related to the company.");
+
+                _logger.LogInformation($"Found {companyStructures.Count} company structures.");
+                if (companyStructures.Any())
+                {
+                    _logger.LogInformation($"Company Structures Data: {JsonConvert.SerializeObject(companyStructures)}");
+                }
+                else
+                {
+                    _logger.LogWarning("No company structures found for the provided CompanyIds.");
+                }
+
+                _logger.LogInformation($"Found {companyStructures.Count} companyStructures  financial records related to the company.");
+                _logger.LogInformation($"Company Structures Data: {JsonConvert.SerializeObject(companyStructures)}");
+
 
                 return new CompanyHierarchyRelatedData
                 {
                     Companies = companies,
-                    Addresses = addresses,
-                    CompanyEmployees = employees,
-                    FinancialRecords = financialRecords,
-                    CompanyRatings = companyRatings,
                     CompanyStructures = companyStructures,
                 };
+
+
             }
             catch (Exception ex)
             {

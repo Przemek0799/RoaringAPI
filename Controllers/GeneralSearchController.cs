@@ -42,12 +42,6 @@ public class SearchController : ControllerBase
             CompanyEmployees = await _context.CompanyEmployees
                                              .Where(ce => EF.Functions.Like(ce.TopDirectorName.ToLower(), $"%{lowerCaseTerm}%"))
                                              .ToListAsync(),
-            // Add similar OR conditions for other entities if needed
-            // Example:
-            // CompanyRatings = _context.CompanyRatings.Where(cr => cr.SomeProperty.Contains(searchTerm) || ...).ToList(),
-            // CompanyStructures = _context.CompanyStructures.Where(cs => cs.SomeProperty.Contains(searchTerm) || ...).ToList(),
-            // FinancialRecords = _context.FinancialRecords.Where(fr => fr.SomeProperty.Contains(searchTerm) || ...).ToList(), 
-            // Addresses = _context.Addresses.Where(a => a.SomeProperty.Contains(searchTerm) || ...).ToList(),
         };
 
         _logger.LogInformation($"Search results: {JsonConvert.SerializeObject(results)}");

@@ -25,6 +25,13 @@ public class FilteredSearchController : ControllerBase
     {
         _logger.LogInformation($"Search requested with companyName: {companyName}, roaringCompanyId: {roaringCompanyId}, startDate: {startDate}, endDate: {endDate}, minRating: {minRating}, maxRating: {maxRating}");
 
+        SearchResults results = await FilteredSearchQuery(companyName, roaringCompanyId, startDate, endDate, minRating, maxRating);
+
+        return Ok(results);
+    }
+
+    private async Task<SearchResults> FilteredSearchQuery(string? companyName, string? roaringCompanyId, DateTime? startDate, DateTime? endDate, int? minRating, int? maxRating)
+    {
         IQueryable<Company> query = _context.Companies;
 
         if (!string.IsNullOrWhiteSpace(companyName))
@@ -53,14 +60,11 @@ public class FilteredSearchController : ControllerBase
             query = query.Where(c => _context.CompanyRatings.Any(r => r.CompanyRatingId == c.CompanyRatingId && (!minRating.HasValue || r.Rating >= minRating) && (!maxRating.HasValue || r.Rating <= maxRating)));
         }
 
-        var companies = await query.ToListAsync();
-
         var results = new SearchResults
         {
-            Companies = companies
-        };
-
-        return Ok(results);
+            Companies = await query.ToListAsync()
+    };
+        return results;
     }
 }
 
