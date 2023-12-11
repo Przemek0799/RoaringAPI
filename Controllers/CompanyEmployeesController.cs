@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoaringAPI.Model;
+//crud för company employees
 
 namespace RoaringAPI.Controllers
 {

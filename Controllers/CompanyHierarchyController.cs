@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 
-//brings most of the data to dashboard
+// hämtar data för company strukturen för ett specifikt company id
 namespace RoaringAPI.Controllers
 {
     [ApiController]

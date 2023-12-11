@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/[controller]")]
+
+// hämtar data för ett specifikt company id med flera input/ filters
 public class FilteredSearchController : ControllerBase
 {
     private readonly RoaringDbcontext _context;

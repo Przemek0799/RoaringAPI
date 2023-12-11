@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoaringAPI.Model;
 
-
+// crud för company structure
 namespace RoaringAPI.Controllers
 {
     [Route("api/[controller]")]
