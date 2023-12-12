@@ -169,5 +169,26 @@ namespace RoaringAPI.Service
             return null;
         }
 
+        public async Task<RoaringSearchResult> FetchCompanyByFreeTextAsync(string freeText)
+        {
+            string url = $"{_configuration["RoaringApiUrls:SearchUrl"]}{freeText}";
+            Console.WriteLine($"Constructed URL for FetchCompanyByFreeTextAsync: {url}");
+
+            var response = await SendRequestAsync(url);
+
+            if (response != null)
+            {
+                Console.WriteLine("Deserializing the response...");
+                return JsonConvert.DeserializeObject<RoaringSearchResult>(response.ToString());
+            }
+            else
+            {
+                Console.WriteLine($"No data returned for free text: {freeText}");
+            }
+            return null;
+        }
+
+
+
     }
 }

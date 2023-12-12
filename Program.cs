@@ -68,6 +68,7 @@ namespace RoaringAPI
             builder.Services.AddScoped<ICompanyMapperService, CompanyMapperService>();
             builder.Services.AddScoped<IAddressMapperService, AddressMapperService>();
             builder.Services.AddScoped<ICompanyEmployeeMapperService, CompanyEmployeeMapperService>();
+            builder.Services.AddScoped<IRoaringApiService, RoaringApiService>();
 
             //broken down controllers
             builder.Services.AddScoped<DashboardResults>();
