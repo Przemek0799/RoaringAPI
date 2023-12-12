@@ -7,6 +7,7 @@ using RoaringAPI.Dashboard;
 using RoaringAPI.Interface;
 using RoaringAPI.Mapping;
 using RoaringAPI.Model;
+using RoaringAPI.Search;
 using RoaringAPI.Service;
 using Serilog;
 using System;
@@ -67,7 +68,13 @@ namespace RoaringAPI
             builder.Services.AddScoped<ICompanyMapperService, CompanyMapperService>();
             builder.Services.AddScoped<IAddressMapperService, AddressMapperService>();
             builder.Services.AddScoped<ICompanyEmployeeMapperService, CompanyEmployeeMapperService>();
+
+            //broken down controllers
             builder.Services.AddScoped<DashboardResults>();
+            builder.Services.AddScoped<GeneralSearchService>();
+            builder.Services.AddScoped<FilteredSearchService>();
+
+
 
             builder.Services.AddHttpClient("RoaringAPI", client =>
             {

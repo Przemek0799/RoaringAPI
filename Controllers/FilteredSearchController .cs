@@ -1,73 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RoaringAPI.Model;
 using RoaringAPI.Models; 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using RoaringAPI.Search;
 
 [ApiController]
 [Route("api/[controller]")]
-
-// hämtar data för ett specifikt company id med flera input/ filters
 public class FilteredSearchController : ControllerBase
 {
-    private readonly RoaringDbcontext _context;
     private readonly ILogger<FilteredSearchController> _logger;
+    private readonly FilteredSearchService _searchService;
 
-    public FilteredSearchController(RoaringDbcontext context, ILogger<FilteredSearchController> logger)
+    public FilteredSearchController(ILogger<FilteredSearchController> logger, FilteredSearchService searchService)
     {
-        _context = context;
         _logger = logger;
+        _searchService = searchService;
     }
+
     [HttpGet]
     public async Task<ActionResult<SearchResults>> FilteredSearch(string? companyName = null, string? roaringCompanyId = null, DateTime? startDate = null, DateTime? endDate = null, int? minRating = null, int? maxRating = null)
     {
-        _logger.LogInformation($"Search requested with companyName: {companyName}, roaringCompanyId: {roaringCompanyId}, startDate: {startDate}, endDate: {endDate}, minRating: {minRating}, maxRating: {maxRating}");
-
-        SearchResults results = await FilteredSearchQuery(companyName, roaringCompanyId, startDate, endDate, minRating, maxRating);
-
+        var results = await _searchService.FilteredSearch(companyName, roaringCompanyId, startDate, endDate, minRating, maxRating);
         return Ok(results);
     }
-
-    private async Task<SearchResults> FilteredSearchQuery(string? companyName, string? roaringCompanyId, DateTime? startDate, DateTime? endDate, int? minRating, int? maxRating)
-    {
-        IQueryable<Company> query = _context.Companies;
-
-        if (!string.IsNullOrWhiteSpace(companyName))
-        {
-            var lowerCaseCompanyName = companyName.ToLower();
-            query = query.Where(c => c.CompanyName.ToLower().Contains(lowerCaseCompanyName));
-        }
-
-        if (!string.IsNullOrWhiteSpace(roaringCompanyId))
-        {
-            query = query.Where(c => c.RoaringCompanyId.Contains(roaringCompanyId));
-        }
-
-        if (startDate.HasValue)
-        {
-            query = query.Where(c => c.CompanyRegistrationDate >= startDate.Value);
-        }
-
-        if (endDate.HasValue)
-        {
-            query = query.Where(c => c.CompanyRegistrationDate <= endDate.Value);
-        }
-
-        if (minRating.HasValue || maxRating.HasValue)
-        {
-            query = query.Where(c => _context.CompanyRatings.Any(r => r.CompanyRatingId == c.CompanyRatingId && (!minRating.HasValue || r.Rating >= minRating) && (!maxRating.HasValue || r.Rating <= maxRating)));
-        }
-
-        var results = new SearchResults
-        {
-            Companies = await query.ToListAsync()
-    };
-        return results;
-    }
 }
+
 
 

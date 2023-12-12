@@ -1,27 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RoaringAPI.Model;
-using RoaringAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RoaringAPI.Models;
+using RoaringAPI.Search;
 
 [ApiController]
 [Route("api/[controller]")]
-
-
-//This controller is for general search in navbar and here you can decide what the searchbar will find in DB
-public class SearchController : ControllerBase
+public class GeneralSearchController : ControllerBase
 {
-    private readonly RoaringDbcontext _context;
-    private readonly ILogger<SearchController> _logger;
+    private readonly ILogger<GeneralSearchController> _logger;
+    private readonly GeneralSearchService _searchService;
 
-    public SearchController(RoaringDbcontext context, ILogger<SearchController> logger)
+    public GeneralSearchController(ILogger<GeneralSearchController> logger, GeneralSearchService searchService)
     {
-        _context = context;
         _logger = logger;
+        _searchService = searchService;
     }
 
     [HttpGet("{searchTerm}")]
@@ -32,17 +24,7 @@ public class SearchController : ControllerBase
             return BadRequest("Search term is required.");
         }
 
-        var lowerCaseTerm = searchTerm.ToLower();
-        var results = new SearchResults
-        {
-            Companies = await _context.Companies
-                                      .Where(c => EF.Functions.Like(c.CompanyName.ToLower(), $"%{lowerCaseTerm}%") ||
-                                                  c.RoaringCompanyId.ToLower().Contains(lowerCaseTerm))
-                                      .ToListAsync(),
-            CompanyEmployees = await _context.CompanyEmployees
-                                             .Where(ce => EF.Functions.Like(ce.TopDirectorName.ToLower(), $"%{lowerCaseTerm}%"))
-                                             .ToListAsync(),
-        };
+        var results = await _searchService.GeneralSearch(searchTerm);
 
         _logger.LogInformation($"Search results: {JsonConvert.SerializeObject(results)}");
 
