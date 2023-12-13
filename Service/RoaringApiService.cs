@@ -169,10 +169,11 @@ namespace RoaringAPI.Service
             return null;
         }
 
-        public async Task<RoaringSearchResult> FetchCompanyByFreeTextAsync(string freeText)
+        public async Task<RoaringSearchResult> FetchCompanySearchAsync(Dictionary<string, string> searchParams)
         {
-            string url = $"{_configuration["RoaringApiUrls:SearchUrl"]}{freeText}";
-            Console.WriteLine($"Constructed URL for FetchCompanyByFreeTextAsync: {url}");
+            var queryParams = string.Join("&", searchParams.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
+            string url = $"{_configuration["RoaringApiUrls:SearchUrl"]}?{queryParams}";
+            Console.WriteLine($"Constructed URL for FetchCompanySearchAsync: {url}");
 
             var response = await SendRequestAsync(url);
 
@@ -183,12 +184,10 @@ namespace RoaringAPI.Service
             }
             else
             {
-                Console.WriteLine($"No data returned for free text: {freeText}");
+                Console.WriteLine($"No data returned for query: {queryParams}");
             }
             return null;
         }
-
-
 
     }
 }

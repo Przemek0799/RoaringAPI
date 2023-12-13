@@ -27,18 +27,19 @@ namespace RoaringAPI.ControllersRoaring
             _companyEmployeeMapperService = companyEmployeeMapperService;
         }
 
-        [HttpGet("searchByFreeText/{freeText}")]
-        public async Task<IActionResult> SearchByFreeText(string freeText)
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] Dictionary<string, string> searchParams)
         {
-            var result = await _roaringApiService.FetchCompanyByFreeTextAsync(freeText);
+            var result = await _roaringApiService.FetchCompanySearchAsync(searchParams);
             if (result != null)
             {
                 return Ok(result);
             }
-            return NotFound();
+            return NotFound("No matching data found.");
         }
 
-         [HttpPost("saveCompany/{companyId}")]
+
+        [HttpPost("saveCompany/{companyId}")]
         public async Task<IActionResult> SaveCompany(string companyId)
         {
             try
