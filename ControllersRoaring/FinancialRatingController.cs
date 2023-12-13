@@ -41,8 +41,8 @@ public class FinancialRatingController : ControllerBase
                 return NotFound($"No company rating data found for company ID: {companyId}");
             }
 
-            var companyRating = await _imapperService.CreateOrUpdateCompanyRatingAsync(companyRatingData);
-
+            // Pass both companyId and companyRatingData to the method
+            var companyRating = await _imapperService.CreateOrUpdateCompanyRatingAsync(companyId, companyRatingData);
             var company = await _imapperService.HandleCompanyAsync(companyId, companyRating.CompanyRatingId);
 
             return Ok();
