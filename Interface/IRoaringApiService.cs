@@ -10,5 +10,6 @@ namespace RoaringAPI.Interface
         Task<CompanyRatingApiRespons> FetchCompanyRatingAsync(string companyId);
         Task<RoaringSearchResult> FetchCompanyByFreeTextAsync(string freeText);
 
+
     }
 }

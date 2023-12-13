@@ -41,49 +41,40 @@ namespace RoaringAPI.Mapping
             if (companyRatingData == null)
                 return null;
 
-            var existingCompany = await _dbContext.Companies
-                .FirstOrDefaultAsync(c => c.RoaringCompanyId == roaringCompanyId);
+            // Handle potential nulls in rejection properties
+            var causeOfReject = companyRatingData.Rejection?.CauseOfReject ?? string.Empty;
+            var rejectComment = companyRatingData.Rejection?.RejectComment ?? string.Empty;
+            var rejectText = companyRatingData.Rejection?.RejectText ?? string.Empty;
 
-            CompanyRating existingCompanyRating = null;
-            if (existingCompany != null && existingCompany.CompanyRatingId.HasValue)
-            {
-                existingCompanyRating = await _dbContext.CompanyRatings
-                    .FindAsync(existingCompany.CompanyRatingId.Value);
-            }
+            // Check if there is already an entry with the same data
+            var existingCompanyRating = await _dbContext.CompanyRatings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cr =>
+                    cr.Rating == companyRatingData.Rating &&
+                    cr.CreditLimit == companyRatingData.CreditLimit &&
+                    cr.Currency == companyRatingData.Currency &&
+                    cr.CauseOfReject == causeOfReject &&
+                    cr.RejectComment == rejectComment &&
+                    cr.RejectText == rejectText &&
+                    cr.Commentary == companyRatingData.Commentary &&
+                    cr.RatingText == companyRatingData.RatingText &&
+                    cr.RiskPrognosis == companyRatingData.RiskPrognosis);
 
             if (existingCompanyRating != null)
             {
-                // Update existing rating
-                UpdateCompanyRating(existingCompanyRating, companyRatingData);
-                await _dbContext.SaveChangesAsync();
+                // If an existing entry matches, use it without making changes
+                await HandleCompanyAsync(roaringCompanyId, existingCompanyRating.CompanyRatingId);
                 return existingCompanyRating;
             }
             else
             {
-                // Create new rating
-                var newRating = MapCompanyRating(companyRatingData);
-                _dbContext.CompanyRatings.Add(newRating);
+                // Create new rating and company
+                var newCompanyRating = MapCompanyRating(companyRatingData);
+                _dbContext.CompanyRatings.Add(newCompanyRating);
                 await _dbContext.SaveChangesAsync();
 
-                if (existingCompany != null)
-                {
-                    existingCompany.CompanyRatingId = newRating.CompanyRatingId;
-                    await _dbContext.SaveChangesAsync();
-                }
-                else
-                {
-                    // Create new company if it doesn't exist
-                    var newCompany = new Company
-                    {
-                        RoaringCompanyId = roaringCompanyId,
-                        CompanyRatingId = newRating.CompanyRatingId,
-                        // Populate other properties if necessary
-                    };
-
-                    _dbContext.Companies.Add(newCompany);
-                    await _dbContext.SaveChangesAsync();
-                }
-                return newRating;
+                await HandleCompanyAsync(roaringCompanyId, newCompanyRating.CompanyRatingId);
+                return newCompanyRating;
             }
         }
 
