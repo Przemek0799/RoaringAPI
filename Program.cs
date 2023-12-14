@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LazyCache;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,7 +11,8 @@ using RoaringAPI.Model;
 using RoaringAPI.Search;
 using RoaringAPI.Service;
 using Serilog;
-using System;
+
+
 
 namespace RoaringAPI
 {
@@ -52,13 +54,21 @@ namespace RoaringAPI
         {
             builder.Services.AddEntityFrameworkSqlite().AddDbContext<RoaringDbcontext>();
 
+
+            builder.Services.AddSingleton<IAppCache, CachingService>();
+
             // API Services
             builder.Services.AddScoped<RoaringApiService>(serviceProvider =>
             {
                 var config = serviceProvider.GetRequiredService<IConfiguration>();
                 var exceptionHandlingService = serviceProvider.GetRequiredService<IExceptionHandlingService>();
-                return new RoaringApiService(config, exceptionHandlingService);
+                var cache = serviceProvider.GetRequiredService<IAppCache>();
+                var logger = serviceProvider.GetRequiredService<ILogger<RoaringApiService>>(); 
+
+                return new RoaringApiService(config, exceptionHandlingService, cache, logger);
             });
+
+
 
             // Exception handling and mappers
             builder.Services.AddScoped<IExceptionHandlingService, ExceptionHandlingService>();

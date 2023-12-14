@@ -45,9 +45,21 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "LazyCache": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            },
             "Microsoft.AspNet.Razor": {
               "target": "Package",
               "version": "[3.3.0, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[6.0.23, )"
+            },
+            "Microsoft.AspNetCore.Identity.UI": {
+              "target": "Package",
+              "version": "[6.0.23, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",

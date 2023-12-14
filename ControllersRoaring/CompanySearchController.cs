@@ -10,17 +10,20 @@ namespace RoaringAPI.ControllersRoaring
     [Route("[controller]")]
     public class CompanySearchController : ControllerBase
     {
+        private readonly ILogger<CompanySearchController> _logger;
         private readonly IRoaringApiService _roaringApiService;
         private readonly ICompanyMapperService _companyMapperService;
         private readonly IAddressMapperService _addressMapperService;
         private readonly ICompanyEmployeeMapperService _companyEmployeeMapperService;
 
         public CompanySearchController(
+            ILogger<CompanySearchController> logger,
             IRoaringApiService roaringApiService,
             ICompanyMapperService companyMapperService,
             IAddressMapperService addressMapperService,
             ICompanyEmployeeMapperService companyEmployeeMapperService)
         {
+            _logger = logger;
             _roaringApiService = roaringApiService;
             _companyMapperService = companyMapperService;
             _addressMapperService = addressMapperService;
@@ -51,16 +54,16 @@ namespace RoaringAPI.ControllersRoaring
                     var record = companyData.Records.First();
                     var company = await _companyMapperService.HandleCompanyAsync(record);
 
-                    // Assuming that the address and employee data are part of the same record
                     var address = await _addressMapperService.HandleAddressAsync(record, company.CompanyId);
                     var employee = await _companyEmployeeMapperService.HandleCompanyEmployeeAsync(record, company.CompanyId);
 
-                    return Ok(new { CompanyId = company?.CompanyId, AddressId = address?.AddressId, EmployeeId = employee?.EmployeeInCompanyId });
+                    return Ok(new { CompanyId = company?.CompanyId, RoaringCompanyId = record?.CompanyId, AddressId = address?.AddressId, EmployeeId = employee?.EmployeeInCompanyId });
                 }
                 return NotFound("Company data not found.");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while saving company data");
                 return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }

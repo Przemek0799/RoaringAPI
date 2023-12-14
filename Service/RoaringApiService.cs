@@ -1,8 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using LazyCache;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RoaringAPI.Interface;
 using RoaringAPI.ModelRoaring;
+using Serilog.Core;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace RoaringAPI.Service
@@ -10,28 +14,36 @@ namespace RoaringAPI.Service
     public class RoaringApiService : IRoaringApiService
     {
         private readonly HttpClient _client = new HttpClient();
-        private string _accessToken;
-
         private readonly IConfiguration _configuration;
         private readonly IExceptionHandlingService _exceptionHandlingService;
-        private readonly string _companyFinancialRecordUrl;
-        public RoaringApiService(IConfiguration configuration, IExceptionHandlingService exceptionHandlingService)
+        private readonly IAppCache _cache;
+        private readonly ILogger<RoaringApiService> _logger;
+
+        public RoaringApiService(IConfiguration configuration, IExceptionHandlingService exceptionHandlingService, IAppCache cache, ILogger<RoaringApiService> logger)
         {
             _configuration = configuration;
             _exceptionHandlingService = exceptionHandlingService;
-            
-            Task.Run(() => GetAccessTokenAsync()).Wait();
+            _cache = cache;
+            _logger = logger;
+
         }
 
         private async Task<JObject> SendRequestAsync(string url)
         {
             try
             {
-                Console.WriteLine("Sending request to: " + url);
+                string accessToken = await GetAccessTokenAsync();
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    throw new InvalidOperationException("Access token is not available.");
+                }
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                _logger.LogInformation("Sending request to: {Url}", url);
                 HttpResponseMessage response = await _client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Data retrieved successfully.");
+                _logger.LogInformation("Data retrieved successfully.");
                 return JObject.Parse(responseBody);
             }
             catch (HttpRequestException e)
@@ -46,27 +58,50 @@ namespace RoaringAPI.Service
             }
         }
 
-        private async Task GetAccessTokenAsync()
+
+
+        private async Task<string> GetAccessTokenAsync()
         {
-            Console.WriteLine("Attempting to retrieve access token...");
-            string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["RoaringApiCredentials:ClientId"]}:{_configuration["RoaringApiCredentials:ClientSecret"]}"));
-            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-
-            var content = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");
-
-            HttpResponseMessage response = await _client.PostAsync(_configuration["RoaringApiUrls:TokenUrl"], content);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string responseJson = await response.Content.ReadAsStringAsync();
-                var jsonResponse = JObject.Parse(responseJson);
-                _accessToken = jsonResponse["access_token"].ToString();
-                Console.WriteLine("Access token retrieved successfully.");
-                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+                // Try to get the token from cache
+                string cachedToken = _cache.Get<string>("AccessToken");
+                if (!string.IsNullOrEmpty(cachedToken))
+                {
+                    _logger.LogInformation("Using cached access token.");
+                    return cachedToken;
+                }
+
+                _logger.LogInformation("Attempting to retrieve access token...");
+                string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["RoaringApiCredentials:ClientId"]}:{_configuration["RoaringApiCredentials:ClientSecret"]}"));
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+
+                var content = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");
+                HttpResponseMessage response = await _client.PostAsync(_configuration["RoaringApiUrls:TokenUrl"], content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseJson = await response.Content.ReadAsStringAsync();
+                    var jsonResponse = JObject.Parse(responseJson);
+                    string accessToken = jsonResponse["access_token"].ToString();
+                    int expiresIn = jsonResponse["expires_in"].ToObject<int>();
+
+                    // Cache the token
+                    _cache.Add("AccessToken", accessToken, TimeSpan.FromSeconds(expiresIn));
+
+                    _logger.LogInformation("Access token retrieved and cached successfully.");
+                    return accessToken;
+                }
+                else
+                {
+                    _logger.LogInformation ("Error retrieving access token.");
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Error retrieving access token.");
+                await _exceptionHandlingService.HandleExceptionAsync(ex, "An error occurred while retrieving the access token");
+                return null;
             }
         }
 
@@ -74,33 +109,33 @@ namespace RoaringAPI.Service
         {
             // Correctly construct the URL using the specific configuration setting
             string url = $"{_configuration["RoaringApiUrls:CompanyFinancialRecordUrl"]}{companyId}";
-            Console.WriteLine($"Constructed URL for FetchCompanyFinancialRecordAsync: {url}"); // Log the URL for debugging
+            _logger.LogInformation($"Constructed URL for FetchCompanyFinancialRecordAsync: {url}"); // Log the URL for debugging
 
             var response = await SendRequestAsync(url);
 
             if (response != null)
             {
-                Console.WriteLine("Deserializing the response...");
+                _logger.LogInformation("Deserializing the response...");
                 var jsonResponse = response.ToString();
-                Console.WriteLine($"Raw JSON response: {jsonResponse}");
+                _logger.LogInformation($"Raw JSON response: {jsonResponse}");
 
                 try
                 {
                     var deserializedResponse = JsonConvert.DeserializeObject<FinancialRecordApiResponse>(jsonResponse);
                     if (deserializedResponse?.Records == null)
                     {
-                        Console.WriteLine("Deserialization successful but FinancialRecord is null.");
+                        _logger.LogInformation("Deserialization successful but FinancialRecord is null.");
                     }
                     return deserializedResponse;
                 }
                 catch (JsonException je)
                 {
-                    Console.WriteLine($"JSON deserialization error: {je.Message}");
+                    _logger.LogInformation($"JSON deserialization error: {je.Message}");
                 }
             }
             else
             {
-                Console.WriteLine($"No data returned for company ID: {companyId} with URL: {url}");
+                _logger.LogInformation($"No data returned for company ID: {companyId} with URL: {url}");
             }
             return null;
         }
@@ -113,12 +148,12 @@ namespace RoaringAPI.Service
 
             if (response != null)
             {
-                Console.WriteLine("Deserializing the response...");
+                _logger.LogInformation("Deserializing the response...");
                 return JsonConvert.DeserializeObject<RoaringApiResponse>(response.ToString());
             }
             else
             {
-                Console.WriteLine($"No data returned for company ID: {companyId}");
+                _logger.LogInformation($"No data returned for company ID: {companyId}");
             }
             return null;
         }
@@ -131,12 +166,12 @@ namespace RoaringAPI.Service
 
             if (response != null)
             {
-                Console.WriteLine("Deserializing the response...");
+                _logger.LogInformation("Deserializing the response...");
                 return JsonConvert.DeserializeObject<RoaringApiResponse>(response.ToString());
             }
             else
             {
-                Console.WriteLine($"No data returned for company ID: {companyId}");
+                _logger.LogInformation($"No data returned for company ID: {companyId}");
             }
             return null;
         }
@@ -148,9 +183,9 @@ namespace RoaringAPI.Service
 
             if (response != null)
             {
-                Console.WriteLine("Deserializing the response...");
+                _logger.LogInformation("Deserializing the response...");
                 var jsonResponse = response.ToString();
-                Console.WriteLine($"Raw JSON response: {jsonResponse}");
+                _logger.LogInformation($"Raw JSON response: {jsonResponse}");
 
                 try
                 {
@@ -159,12 +194,12 @@ namespace RoaringAPI.Service
                 }
                 catch (JsonException je)
                 {
-                    Console.WriteLine($"JSON deserialization error: {je.Message}");
+                    _logger.LogInformation($"JSON deserialization error: {je.Message}");
                 }
             }
             else
             {
-                Console.WriteLine($"No data returned for company ID: {companyId}");
+                _logger.LogInformation($"No data returned for company ID: {companyId}");
             }
             return null;
         }
@@ -173,18 +208,18 @@ namespace RoaringAPI.Service
         {
             var queryParams = string.Join("&", searchParams.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
             string url = $"{_configuration["RoaringApiUrls:SearchUrl"]}?{queryParams}";
-            Console.WriteLine($"Constructed URL for FetchCompanySearchAsync: {url}");
+            _logger.LogInformation($"Constructed URL for FetchCompanySearchAsync: {url}");
 
             var response = await SendRequestAsync(url);
 
             if (response != null)
             {
-                Console.WriteLine("Deserializing the response...");
+                _logger.LogInformation("Deserializing the response...");
                 return JsonConvert.DeserializeObject<RoaringSearchResult>(response.ToString());
             }
             else
             {
-                Console.WriteLine($"No data returned for query: {queryParams}");
+                _logger.LogInformation($"No data returned for query: {queryParams}");
             }
             return null;
         }
