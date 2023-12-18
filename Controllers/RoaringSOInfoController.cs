@@ -12,7 +12,7 @@ namespace RoaringAPI.Controllers
 
         public RoaringSOInfoController(RoaringDbcontext context)
         {
-            _context = context; // Ensure this line is correctly initializing _context
+            _context = context; 
         }
 
         [HttpGet]
