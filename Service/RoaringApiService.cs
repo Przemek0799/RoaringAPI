@@ -58,8 +58,6 @@ namespace RoaringAPI.Service
             }
         }
 
-
-
         private async Task<string> GetAccessTokenAsync()
         {
             try
