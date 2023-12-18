@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RoaringAPI.ControllersRoaring;
 using RoaringAPI.Interface;
 using RoaringAPI.Model;
 using RoaringAPI.ModelRoaring;
@@ -8,10 +9,14 @@ namespace RoaringAPI.Mapping
     public class FinancialRatingMapperService : IFinancialRatingMapperService
     {
         private readonly RoaringDbcontext _dbContext;
+        private readonly ILogger<FinancialRatingMapperService> _logger;
 
-        public FinancialRatingMapperService(RoaringDbcontext dbContext)
+
+        public FinancialRatingMapperService(RoaringDbcontext dbContext, ILogger<FinancialRatingMapperService> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
+
         }
 
         public CompanyRating MapCompanyRating(CompanyRatingApiRespons companyRatingData)
@@ -39,13 +44,23 @@ namespace RoaringAPI.Mapping
         public async Task<CompanyRating> CreateOrUpdateCompanyRatingAsync(string roaringCompanyId, CompanyRatingApiRespons companyRatingData)
         {
             if (companyRatingData == null)
+            {
+                _logger.LogInformation("No company rating data provided for companyId {CompanyId}", roaringCompanyId);
                 return null;
+            }
 
-            // Handle potential nulls in rejection properties
-            var causeOfReject = companyRatingData.Rejection?.CauseOfReject ?? string.Empty;
-            var rejectComment = companyRatingData.Rejection?.RejectComment ?? string.Empty;
-            var rejectText = companyRatingData.Rejection?.RejectText ?? string.Empty;
+            // Normalize nulls to empty strings for comparison
+            var causeOfRejectNormalized = companyRatingData.Rejection?.CauseOfReject ?? string.Empty;
+            var rejectCommentNormalized = companyRatingData.Rejection?.RejectComment ?? string.Empty;
+            var rejectTextNormalized = companyRatingData.Rejection?.RejectText ?? string.Empty;
+            var commentaryNormalized = companyRatingData.Commentary ?? string.Empty;
+            var ratingTextNormalized = companyRatingData.RatingText ?? string.Empty;
+            var riskPrognosisNormalized = companyRatingData.RiskPrognosis ?? string.Empty;
 
+            // Log the fetched data and comparison parameters
+            _logger.LogInformation("Fetched data for companyId {CompanyId}: {CompanyRatingData}", roaringCompanyId, companyRatingData);
+            _logger.LogInformation("Checking for existing rating with Rating: {Rating}, CreditLimit: {CreditLimit}, Currency: {Currency}, CauseOfReject: {CauseOfReject}, RejectComment: {RejectComment}, RejectText: {RejectText}, Commentary: {Commentary}, RatingText: {RatingText}, RiskPrognosis: {RiskPrognosis}",
+                companyRatingData.Rating, companyRatingData.CreditLimit, companyRatingData.Currency, causeOfRejectNormalized, commentaryNormalized, rejectTextNormalized, companyRatingData.Commentary, companyRatingData.RatingText, companyRatingData.RiskPrognosis);
             // Check if there is already an entry with the same data
             var existingCompanyRating = await _dbContext.CompanyRatings
                 .AsNoTracking()
@@ -53,30 +68,39 @@ namespace RoaringAPI.Mapping
                     cr.Rating == companyRatingData.Rating &&
                     cr.CreditLimit == companyRatingData.CreditLimit &&
                     cr.Currency == companyRatingData.Currency &&
-                    cr.CauseOfReject == causeOfReject &&
-                    cr.RejectComment == rejectComment &&
-                    cr.RejectText == rejectText &&
-                    cr.Commentary == companyRatingData.Commentary &&
-                    cr.RatingText == companyRatingData.RatingText &&
-                    cr.RiskPrognosis == companyRatingData.RiskPrognosis);
+                    (cr.CauseOfReject == causeOfRejectNormalized || (cr.CauseOfReject == null && string.IsNullOrEmpty(causeOfRejectNormalized))) &&
+                    (cr.RejectComment == rejectCommentNormalized || (cr.RejectComment == null && string.IsNullOrEmpty(rejectCommentNormalized))) &&
+                    (cr.RejectText == rejectTextNormalized || (cr.RejectText == null && string.IsNullOrEmpty(rejectTextNormalized))) &&
+                    (cr.Commentary == commentaryNormalized || (cr.Commentary == null && string.IsNullOrEmpty(commentaryNormalized))) &&
+                    (cr.RatingText == ratingTextNormalized || (cr.RatingText == null && string.IsNullOrEmpty(ratingTextNormalized))) &&
+                    (cr.RiskPrognosis == riskPrognosisNormalized || (cr.RiskPrognosis == null && string.IsNullOrEmpty(riskPrognosisNormalized))));
 
             if (existingCompanyRating != null)
             {
+                // Log found existing rating
+                _logger.LogInformation("Existing rating found for companyId {CompanyId}: {ExistingRating}", roaringCompanyId, existingCompanyRating);
+
                 // If an existing entry matches, use it without making changes
                 await HandleCompanyAsync(roaringCompanyId, existingCompanyRating.CompanyRatingId);
                 return existingCompanyRating;
             }
             else
             {
+                _logger.LogInformation("No existing rating found for companyId {CompanyId}, creating new rating.", roaringCompanyId);
+
                 // Create new rating and company
                 var newCompanyRating = MapCompanyRating(companyRatingData);
                 _dbContext.CompanyRatings.Add(newCompanyRating);
                 await _dbContext.SaveChangesAsync();
 
+                // Log creation of new rating
+                _logger.LogInformation("Created new rating for companyId {CompanyId}: {NewRating}", roaringCompanyId, newCompanyRating);
+
                 await HandleCompanyAsync(roaringCompanyId, newCompanyRating.CompanyRatingId);
                 return newCompanyRating;
             }
         }
+
 
 
 
