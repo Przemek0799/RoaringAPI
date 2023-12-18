@@ -1,12 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 using RoaringAPI.Service;
 using RoaringAPI.Model;
-using RoaringAPI.ModelRoaring;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging; 
-using RoaringAPI.Mapping;
 using RoaringAPI.Interface;
 
 [ApiController]

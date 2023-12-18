@@ -1,15 +1,7 @@
-﻿// FinancialRatingController
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Model;
 using RoaringAPI.Service;
-using Microsoft.Extensions.Logging; // Add this using directive
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using RoaringAPI.Mapping;
 using RoaringAPI.Interface;
-
-// ... other using statements
 
 [ApiController]
 [Route("[controller]")]

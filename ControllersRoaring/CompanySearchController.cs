@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Interface;
-using RoaringAPI.Model;
-using RoaringAPI.ModelRoaring;
-using System.Threading.Tasks;
 
 namespace RoaringAPI.ControllersRoaring
 {

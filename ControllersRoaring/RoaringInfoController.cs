@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Interface;
-using RoaringAPI.Mapping;
 using RoaringAPI.Service;
 
 [ApiController]

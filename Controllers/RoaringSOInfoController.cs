@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoaringAPI.Model;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace RoaringAPI.Controllers
 {
