@@ -19,6 +19,7 @@ namespace RoaringAPI.Service
         private readonly IAppCache _cache;
         private readonly ILogger<RoaringApiService> _logger;
 
+
         public RoaringApiService(IConfiguration configuration, IExceptionHandlingService exceptionHandlingService, IAppCache cache, ILogger<RoaringApiService> logger)
         {
             _configuration = configuration;
