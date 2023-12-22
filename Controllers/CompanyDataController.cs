@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Model;
 using RoaringAPI.Dashboard;
+using Microsoft.AspNetCore.Authorization;
 
 //brings most of the data to dashboard
 namespace RoaringAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CompanyDataController : ControllerBase
     {
         private readonly RoaringDbcontext _context;

@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Interface;
 using RoaringAPI.Service;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class GroupStructureController : ControllerBase
 {
     private readonly RoaringApiService _roaringApiService;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoaringAPI.Model;
 
@@ -6,6 +7,8 @@ namespace RoaringAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+
     public class RoaringSOInfoController : ControllerBase
     {
         private readonly RoaringDbcontext _context;
@@ -18,6 +21,7 @@ namespace RoaringAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<RoaringSOInfoData>> GetAllData()
         {
+
             var addresses = await _context.Addresses.ToListAsync();
             var companies = await _context.Companies.ToListAsync();
             var companyEmployees = await _context.CompanyEmployees.ToListAsync();

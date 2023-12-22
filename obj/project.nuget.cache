@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "hs/hAjz1zQ3+sAtPa9OZj++6PIGKNtkfW1PZYMhKQxj5XtRv7t5UYDkD1qtwNPy1HJ59raNF9L0NQKLZ0S4mPA==",
+  "dgSpecHash": "UL/hDWAeamO+wTBBO97JJxDXlODzRab3YH4JZGIbVbvn8VHp/I+torgKZjelJ/+ib81dcf0bv7MXRkazQ3qr0Q==",
   "success": true,
   "projectFilePath": "C:\\Users\\przem\\source\\repos\\RoaringAPI\\RoaringAPI.csproj",
   "expectedPackageFiles": [
@@ -61,6 +61,7 @@
     "C:\\Users\\przem\\.nuget\\packages\\messagepack.annotations\\2.1.152\\messagepack.annotations.2.1.152.nupkg.sha512",
     "C:\\Users\\przem\\.nuget\\packages\\messagepackanalyzer\\2.1.152\\messagepackanalyzer.2.1.152.nupkg.sha512",
     "C:\\Users\\przem\\.nuget\\packages\\microsoft.aspnet.razor\\3.3.0\\microsoft.aspnet.razor.3.3.0.nupkg.sha512",
+    "C:\\Users\\przem\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\6.0.25\\microsoft.aspnetcore.authentication.jwtbearer.6.0.25.nupkg.sha512",
     "C:\\Users\\przem\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\6.0.23\\microsoft.aspnetcore.cryptography.internal.6.0.23.nupkg.sha512",
     "C:\\Users\\przem\\.nuget\\packages\\microsoft.aspnetcore.cryptography.keyderivation\\6.0.23\\microsoft.aspnetcore.cryptography.keyderivation.6.0.23.nupkg.sha512",
     "C:\\Users\\przem\\.nuget\\packages\\microsoft.aspnetcore.identity.entityframeworkcore\\6.0.23\\microsoft.aspnetcore.identity.entityframeworkcore.6.0.23.nupkg.sha512",

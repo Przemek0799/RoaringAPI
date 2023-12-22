@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RoaringAPI.Model;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
 
 
 // hämtar data för company strukturen för ett specifikt company id
@@ -9,6 +10,7 @@ namespace RoaringAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CompanyHierarchyController : ControllerBase
     {
         private readonly RoaringDbcontext _context;

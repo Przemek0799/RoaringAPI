@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Interface;
 
 namespace RoaringAPI.ControllersRoaring
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class CompanySearchController : ControllerBase
     {
         private readonly ILogger<CompanySearchController> _logger;

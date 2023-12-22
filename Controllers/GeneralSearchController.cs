@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RoaringAPI.Models;
 using RoaringAPI.Search;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GeneralSearchController : ControllerBase
 {
     private readonly ILogger<GeneralSearchController> _logger;

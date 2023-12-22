@@ -1,8 +1,10 @@
 ﻿using LazyCache;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RoaringAPI.Dashboard;
 using RoaringAPI.Interface;
@@ -11,8 +13,7 @@ using RoaringAPI.Model;
 using RoaringAPI.Search;
 using RoaringAPI.Service;
 using Serilog;
-
-
+using System.Text;
 
 namespace RoaringAPI
 {
@@ -87,6 +88,27 @@ namespace RoaringAPI
 
 
 
+            // Configure JWT Authentication
+            var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+
+
             builder.Services.AddHttpClient("RoaringAPI", client =>
             {
                 client.BaseAddress = new Uri("https://api.roaring.io/");
@@ -113,6 +135,7 @@ namespace RoaringAPI
                 });
             }
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

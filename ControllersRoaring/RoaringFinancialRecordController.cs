@@ -2,9 +2,11 @@
 using RoaringAPI.Service;
 using RoaringAPI.Model;
 using RoaringAPI.Interface;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class RoaringFinancialRecordController : ControllerBase
 {
     private readonly RoaringApiService _roaringApiService;

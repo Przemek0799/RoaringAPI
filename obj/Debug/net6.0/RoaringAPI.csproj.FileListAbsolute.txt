@@ -317,3 +317,4 @@ C:\Users\przem\source\repos\RoaringAPI\obj\Debug\net6.0\refint\RoaringAPI.dll
 C:\Users\przem\source\repos\RoaringAPI\obj\Debug\net6.0\RoaringAPI.pdb
 C:\Users\przem\source\repos\RoaringAPI\obj\Debug\net6.0\RoaringAPI.genruntimeconfig.cache
 C:\Users\przem\source\repos\RoaringAPI\obj\Debug\net6.0\ref\RoaringAPI.dll
+C:\Users\przem\source\repos\RoaringAPI\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

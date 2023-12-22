@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RoaringAPI.Models; 
 using RoaringAPI.Search;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FilteredSearchController : ControllerBase
 {
     private readonly ILogger<FilteredSearchController> _logger;
