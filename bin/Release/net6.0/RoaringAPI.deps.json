@@ -20,6 +20,7 @@
           "Serilog": "3.1.1",
           "Serilog.AspNetCore": "8.0.0",
           "Serilog.Sinks.Console": "5.0.0",
+          "Serilog.Sinks.File": "5.0.0",
           "Swashbuckle.AspNetCore": "6.5.0"
         },
         "runtime": {

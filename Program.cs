@@ -29,9 +29,15 @@ namespace RoaringAPI
             {
                 var builder = WebApplication.CreateBuilder(args);
 
-                builder.Host.UseSerilog((ctx, lc) => lc
-                    .WriteTo.Console()
-                    .ReadFrom.Configuration(ctx.Configuration));
+                // Configure Serilog
+                builder.Host.UseSerilog((context, loggerConfiguration) =>
+                {
+                    loggerConfiguration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .Enrich.FromLogContext()
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day); // Example for file sink
+                });
 
                 ConfigureServices(builder);
 
