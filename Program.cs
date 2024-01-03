@@ -36,7 +36,7 @@ namespace RoaringAPI
                         .ReadFrom.Configuration(context.Configuration)
                         .Enrich.FromLogContext()
                         .WriteTo.Console()
-                        .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day); // Example for file sink
+                        .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day); 
                 });
 
                 ConfigureServices(builder);
