@@ -79,7 +79,7 @@ namespace RoaringAPI.Service
                 }
 
                 _logger.LogInformation("Attempting to retrieve access token...");
-                string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["ClientId"]}:{_configuration["ClientSecret"]}"));
+                string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["RoaringClientId"]}:{_configuration["RoaringClientSecret"]}"));
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
 
                 var content = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");

@@ -89,7 +89,7 @@ namespace RoaringAPI
 
 
             // Configure JWT Authentication
-            var key = Encoding.ASCII.GetBytes(builder.Configuration["jwtKey"]);
+            var key = Encoding.ASCII.GetBytes(builder.Configuration["RoaringjwtKey"]);
             builder.Services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
