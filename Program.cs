@@ -13,6 +13,8 @@ using RoaringAPI.Model;
 using RoaringAPI.Search;
 using RoaringAPI.Service;
 using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 using System.Text;
 
 namespace RoaringAPI
@@ -22,22 +24,24 @@ namespace RoaringAPI
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
+                 .MinimumLevel.Debug()
+                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                 .Enrich.FromLogContext()
+                 .WriteTo.Console()
+                 .WriteTo.File(
+                     new CompactJsonFormatter(),
+                     "Logs/logs-.txt",
+                     rollingInterval: RollingInterval.Day,
+                     retainedFileCountLimit: 7) // Keep log files for 7 days
+                 .CreateLogger();
 
             try
             {
                 var builder = WebApplication.CreateBuilder(args);
 
-                // Configure Serilog
-                builder.Host.UseSerilog((context, loggerConfiguration) =>
-                {
-                    loggerConfiguration
-                        .ReadFrom.Configuration(context.Configuration)
-                        .Enrich.FromLogContext()
-                        .WriteTo.Console()
-                        .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day); 
-                });
+                // Use Serilog
+                builder.Host.UseSerilog();
+
 
                 ConfigureServices(builder);
 
