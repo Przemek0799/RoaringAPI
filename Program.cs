@@ -67,17 +67,21 @@ namespace RoaringAPI
 
 
             builder.Services.AddSingleton<IAppCache, CachingService>();
+            builder.Services.AddScoped<ICacheService, CacheService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
 
             // API Services
             builder.Services.AddScoped<RoaringApiService>(serviceProvider =>
             {
                 var config = serviceProvider.GetRequiredService<IConfiguration>();
                 var exceptionHandlingService = serviceProvider.GetRequiredService<IExceptionHandlingService>();
-                var cache = serviceProvider.GetRequiredService<IAppCache>();
-                var logger = serviceProvider.GetRequiredService<ILogger<RoaringApiService>>(); 
+                var logger = serviceProvider.GetRequiredService<ILogger<RoaringApiService>>();
+                var cacheService = serviceProvider.GetRequiredService<ICacheService>();
+                var tokenService = serviceProvider.GetRequiredService<ITokenService>(); 
 
-                return new RoaringApiService(config, exceptionHandlingService, cache, logger);
+                return new RoaringApiService(config, exceptionHandlingService, logger, cacheService, tokenService); 
             });
+
 
 
 

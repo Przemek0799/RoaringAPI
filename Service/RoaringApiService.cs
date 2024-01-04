@@ -1,13 +1,9 @@
 ﻿using LazyCache;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RoaringAPI.Interface;
 using RoaringAPI.ModelRoaring;
-using Serilog.Core;
 using System.Net.Http.Headers;
-using System.Text;
 
 namespace RoaringAPI.Service
 {
@@ -18,14 +14,18 @@ namespace RoaringAPI.Service
         private readonly IExceptionHandlingService _exceptionHandlingService;
         private readonly IAppCache _cache;
         private readonly ILogger<RoaringApiService> _logger;
+        private readonly ICacheService _cacheService;
+        private readonly ITokenService _tokenService;
 
 
-        public RoaringApiService(IConfiguration configuration, IExceptionHandlingService exceptionHandlingService, IAppCache cache, ILogger<RoaringApiService> logger)
+
+        public RoaringApiService(IConfiguration configuration, IExceptionHandlingService exceptionHandlingService, ILogger<RoaringApiService> logger, ICacheService cacheService, ITokenService tokenService)
         {
             _configuration = configuration;
             _exceptionHandlingService = exceptionHandlingService;
-            _cache = cache;
             _logger = logger;
+            _cacheService = cacheService;
+            _tokenService = tokenService;
 
         }
 
@@ -33,7 +33,7 @@ namespace RoaringAPI.Service
         {
             try
             {
-                string accessToken = await GetAccessTokenAsync();
+                string accessToken = await _tokenService.GetAccessTokenAsync();
                 if (string.IsNullOrEmpty(accessToken))
                 {
                     throw new InvalidOperationException("Access token is not available.");
@@ -59,68 +59,7 @@ namespace RoaringAPI.Service
             }
         }
 
-        private async Task<string> GetAccessTokenAsync()
-        {
-            try
-            {
-                if (!IsTokenExpired())
-                {
-                    _logger.LogInformation("Using cached access token.");
-                    return _cache.Get<(string Token, DateTime Expiration)>("AccessToken").Token;
-                }
-                _logger.LogInformation("Access token expired. Attempting to retrieve new access token...");
-
-                // Try to get the token from cache
-                string cachedToken = _cache.Get<string>("AccessToken");
-                if (!string.IsNullOrEmpty(cachedToken))
-                {
-                    _logger.LogInformation("Using cached access token.");
-                    return cachedToken;
-                }
-
-                _logger.LogInformation("Attempting to retrieve access token...");
-                string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["RoaringClientId"]}:{_configuration["RoaringClientSecret"]}"));
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
-
-                var content = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");
-                HttpResponseMessage response = await _client.PostAsync(_configuration["RoaringApiUrls:TokenUrl"], content);
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseJson = await response.Content.ReadAsStringAsync();
-                    var jsonResponse = JObject.Parse(responseJson);
-                    string accessToken = jsonResponse["access_token"].ToString();
-                    int expiresIn = jsonResponse["expires_in"].ToObject<int>();
-
-                    // Calculate the expiration time of the token
-                    DateTime expiration = DateTime.UtcNow.AddSeconds(expiresIn);
-
-                    // Cache the token with its expiration time
-                    _cache.Add("AccessToken", (accessToken, expiration), TimeSpan.FromSeconds(expiresIn));
-
-                    _logger.LogInformation("New access token retrieved and cached successfully.");
-                    return accessToken;
-                }
-                else
-                {
-                    _logger.LogInformation("Error retrieving new access token.");
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                await _exceptionHandlingService.HandleExceptionAsync(ex, "An error occurred while retrieving the access token");
-                return null;
-            }
-        }
-        private bool IsTokenExpired()
-        {
-            var tokenCache = _cache.Get<(string Token, DateTime Expiration)>("AccessToken");
-            if (string.IsNullOrEmpty(tokenCache.Token) || tokenCache.Expiration <= DateTime.UtcNow)
-            {
-                return true;
-            }
-            return false;
-        }
+  
 
         public async Task<FinancialRecordApiResponse> FetchCompanyFinancialRecordAsync(string companyId)
         {

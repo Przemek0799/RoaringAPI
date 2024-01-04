@@ -16,7 +16,6 @@ namespace RoaringAPI.Service
 
         public async Task HandleExceptionAsync(Exception exception, string customMessage)
         {
-            // Log the exception using the injected logger
             _logger.LogError(exception, "Exception: {CustomMessage}", customMessage);
         }
     }
